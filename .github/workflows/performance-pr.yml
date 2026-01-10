@@ -68,7 +68,12 @@ jobs:
 
       - name: Save PR number
         run: |
-          echo "${{ github.event.pull_request.number }}" > pr_number.txt
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "Error: Pull request number is not available in event payload." >&2
+            exit 1
+          fi
+          echo "$PR_NUMBER" > pr_number.txt
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4

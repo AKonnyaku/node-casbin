@@ -42,13 +42,15 @@ try:
         except ValueError:
             return None
         suffix = (m.group(2) or "").replace("µ", "u")
-        multipliers = {
-            "n": 1e-9, "ns": 1e-9,
-            "u": 1e-6, "us": 1e-6, "µ": 1e-6,
-            "m": 1e-3, "ms": 1e-3,
-            "s": 1.0,
-        }
-        return val * multipliers.get(suffix, 1.0)
+        
+        if suffix in ["n", "ns"]: return val * 1e-9
+        if suffix in ["u", "us"]: return val * 1e-6
+        if suffix in ["m", "ms"]: return val * 1e-3
+        if suffix == "s": return val
+        if suffix == "": return val # Handle unitless numbers (e.g. counts) if any
+        
+        # If we reach here, it's an unexpected unit
+        raise ValueError(f"Unexpected unit: {suffix}")
 
     def extract_two_numbers(tokens):
         found = []
