@@ -4,170 +4,76 @@ on:
   pull_request:
     branches: [master]
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
   benchmark-pr:
-    name: Performance benchmark comparison
+    name: Run Benchmark & Compare
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
+          cache: 'yarn'
 
-      - name: Save commit info
-        id: commits
-        run: |
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          echo "base_short=${BASE_SHA:0:7}" >> $GITHUB_OUTPUT
-          echo "head_short=${HEAD_SHA:0:7}" >> $GITHUB_OUTPUT
-
-      - name: Install dependencies
-        run: |
-          if [ -f yarn.lock ]; then npm install -g yarn && rm yarn.lock && yarn install --ignore-scripts; else npm install --ignore-scripts; fi
-
-          npm install --no-save benchmark @types/benchmark ts-node typescript
+      - name: Install dependencies (PR)
+        working-directory: pr
+        run: yarn install
 
       - name: Run benchmark on PR branch
+        working-directory: pr
         run: |
-          ./node_modules/.bin/ts-node benchmark/index.ts > pr-bench.json
+          npx ts-node benchmark/index.ts > ../pr_raw.json
 
-      # Checkout base branch to 'base' subdirectory
       - name: Checkout base branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: base
 
+      - name: Install dependencies (Base)
+        working-directory: base
+        run: yarn install
+
       - name: Run benchmark on base branch
+        working-directory: base
         run: |
-          # Copy benchmark directory to base
-          cp -r benchmark base/
-          
-          cd base
-          if [ -f yarn.lock ]; then npm install -g yarn && rm yarn.lock && yarn install --ignore-scripts; else npm install --ignore-scripts; fi
-          npm install --no-save benchmark @types/benchmark ts-node typescript
-          
-          ../node_modules/.bin/ts-node benchmark/index.ts > ../base-bench.json
+          npx ts-node benchmark/index.ts > ../base_raw.json
 
-      - name: Compare benchmarks
-        id: compare
-        run: |
-          cat > comparison.md << 'EOF'
-          ## Benchmark Comparison
-          
-          Comparing base branch (`${{ steps.commits.outputs.base_short }}`)
-          vs PR branch (`${{ steps.commits.outputs.head_short }}`)
-          
-          ```
-          EOF
-          
-          # Generate comparison table using Python
-          python3 - <<'PY' >> comparison.md
-          import json
-          import math
-          import os
-          
-          def mean(data):
-              return sum(data) / len(data) if data else 0.0
-          
-          def fmt_ns(ns):
-              if ns < 0 or math.isnan(ns): return "-"
-              if ns < 1000: return f"{ns:.2f}n"
-              if ns < 1e6: return f"{ns/1e3:.2f}µ"
-              if ns < 1e9: return f"{ns/1e6:.2f}m"
-              return f"{ns/1e9:.2f}s"
-          
-          def metric_to_ns_values(metric):
-              unit = str(metric.get("scoreUnit", "") or "")
-              val = float(metric.get("score", 0.0))
-              if unit.endswith("/op"): # ns/op
-                  t_unit = unit.split("/", 1)[0]
-                  mult = {"ns": 1.0, "us": 1e3, "ms": 1e6, "s": 1e9}.get(t_unit)
-                  return [val * mult] if mult else [val]
-              if unit.startswith("ops/"): # ops/s
-                  denom = unit.split("/", 1)[1]
-                  mult = {"ns": 1e-9, "us": 1e-6, "ms": 1e-3, "s": 1.0}.get(denom)
-                  if mult is None or val == 0: return [0.0]
-                  return [1e9 / (val / mult)]
-              return [val]
-          
-          def load_results(path):
-              try:
-                  with open(path, "r", encoding="utf-8") as f:
-                      return json.load(f)
-              except: return []
-          
-          base_data = load_results("base-bench.json")
-          pr_data = load_results("pr-bench.json")
-          
-          base_map = {b["benchmark"]: metric_to_ns_values(b["primaryMetric"])[0] for b in base_data}
-          pr_map = {b["benchmark"]: metric_to_ns_values(b["primaryMetric"])[0] for b in pr_data}
-          
-          all_keys = sorted(list(set(base_map.keys()) | set(pr_map.keys())))
-          
-          print(f"{'':<40}│ {'base':^14} │ {'pr':^14} │ {'diff':^10} │")
-          
-          for k in all_keys:
-              b_val = base_map.get(k, 0.0)
-              p_val = pr_map.get(k, 0.0)
-              
-              if b_val > 0 and p_val > 0:
-                  diff = (p_val - b_val) / b_val
-                  diff_str = f"{diff:+.2%}"
-                  if diff < -0.10: status = "🚀"
-                  elif diff > 0.10: status = "🐌"
-                  else: status = "➡️"
-              else:
-                  diff_str = "-"
-                  status = ""
-              
-              b_str = fmt_ns(b_val) if b_val else "-"
-              p_str = fmt_ns(p_val) if p_val else "-"
-              
-              print(f"{k:<40} {b_str:>14}   {p_str:>14}   {diff_str:>10} {status}")
-          PY
-          
-          echo '```' >> comparison.md
-
-      - name: Post benchmark comparison comment
-        uses: actions/github-script@v7
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          script: |
-            const fs = require('fs');
-            const comparison = fs.readFileSync('comparison.md', 'utf8');
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const botComment = comments.find(comment =>
-              comment.user.type === 'Bot' &&
-              comment.body.includes('Benchmark Comparison')
-            );
-            const footer = '<sub>🤖 Automatically updated benchmark results.</sub>';
-            const commentBody = `${comparison}\n\n${footer}`;
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: commentBody
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: commentBody
-              });
-            }
+          python-version: '3.12'
+
+      - name: Process Results
+        run: |
+          # Use scripts from PR branch
+          cp -r pr/.github/scripts .
+
+          # Format raw outputs to standardized JSON
+          # We don't need commit info for comparison, so we can skip env vars or set dummies
+          python scripts/format_benchmark_data.py base_raw.json base_standard.json
+          python scripts/format_benchmark_data.py pr_raw.json pr_standard.json
+
+          # Generate Comparison Table
+          python scripts/benchstat_simulator.py base_standard.json pr_standard.json > comparison.md
+
+          # Format/Beautify Table
+          python scripts/benchmark_formatter.py
+
+      - name: Save PR number
+        run: |
+          echo "${{ github.event.pull_request.number }}" > pr_number.txt
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            comparison.md
+            pr_number.txt
