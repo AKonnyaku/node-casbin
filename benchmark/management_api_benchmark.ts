@@ -3,9 +3,9 @@ import * as path from 'path';
 import { newEnforcer } from '../src';
 
 // Helper to resolve paths
-const resolve = (p: string) => path.join(__dirname, '..', p);
+const resolve = (p: string): string => path.join(__dirname, '..', p);
 
-export async function addManagementApiBenchmarks(suite: benchmark.Suite) {
+export async function addManagementApiBenchmarks(suite: benchmark.Suite): Promise<void> {
   // BenchmarkHasPolicySmall
   const eHasSmall = await newEnforcer(resolve('examples/basic_model.conf'));
   eHasSmall.enableLog(false);

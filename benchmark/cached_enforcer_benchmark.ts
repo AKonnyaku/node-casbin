@@ -3,10 +3,10 @@ import * as path from 'path';
 import { CachedEnforcer, newCachedEnforcer, Util } from '../src';
 
 // Helper to resolve paths
-const resolve = (p: string) => path.join(__dirname, '..', p);
+const resolve = (p: string): string => path.join(__dirname, '..', p);
 
 // Helper to generate RBAC policies (Short names: group%d)
-async function generateRBAC(e: CachedEnforcer, roles: number, resources: number, users: number) {
+async function generateRBAC(e: CachedEnforcer, roles: number, resources: number, users: number): Promise<void> {
   const pPolicies = [];
   for (let i = 0; i < roles; i++) {
     pPolicies.push([`group${i}`, `data${Math.floor(i / 10)}`, 'read']);
@@ -24,7 +24,7 @@ async function generateRBAC(e: CachedEnforcer, roles: number, resources: number,
   }
 }
 
-export async function addCachedEnforcerBenchmarks(suite: benchmark.Suite) {
+export async function addCachedEnforcerBenchmarks(suite: benchmark.Suite): Promise<void> {
   // BenchmarkCachedBasicModel
   const eBasic = await newCachedEnforcer(resolve('examples/basic_model.conf'), resolve('examples/basic_policy.csv'));
   eBasic.enableLog(false);

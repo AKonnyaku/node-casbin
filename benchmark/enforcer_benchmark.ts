@@ -3,10 +3,10 @@ import * as path from 'path';
 import { Enforcer, newEnforcer, Util } from '../src';
 
 // Helper to resolve paths
-const resolve = (p: string) => path.join(__dirname, '..', p);
+const resolve = (p: string): string => path.join(__dirname, '..', p);
 
 // Helper to generate RBAC policies (Short names: group%d)
-async function generateRBAC(e: Enforcer, roles: number, resources: number, users: number) {
+async function generateRBAC(e: Enforcer, roles: number, resources: number, users: number): Promise<void> {
   const pPolicies = [];
   for (let i = 0; i < roles; i++) {
     pPolicies.push([`group${i}`, `data${Math.floor(i / 10)}`, 'read']);
@@ -25,7 +25,7 @@ async function generateRBAC(e: Enforcer, roles: number, resources: number, users
 }
 
 // Helper to generate RBAC policies (Long names: group-has-a-very-long-name-%d)
-async function generateRBACLong(e: Enforcer, roles: number, resources: number, users: number) {
+async function generateRBACLong(e: Enforcer, roles: number, resources: number, users: number): Promise<void> {
   const pPolicies = [];
   for (let i = 0; i < roles; i++) {
     pPolicies.push([`group-has-a-very-long-name-${i}`, `data-has-a-very-long-name-${i % resources}`, 'read']);
@@ -44,7 +44,7 @@ async function generateRBACLong(e: Enforcer, roles: number, resources: number, u
 }
 
 // Helper to get enforcement params for Long names
-function getEnforcementsLong(users: number, roles: number, resources: number) {
+function getEnforcementsLong(users: number, roles: number, resources: number): string[][] {
   const enforcements = [];
   for (let i = 0; i < 17; i++) {
     const userNum = Math.floor((users / 17) * i);
@@ -58,7 +58,7 @@ function getEnforcementsLong(users: number, roles: number, resources: number) {
   return enforcements;
 }
 
-export async function addEnforcerBenchmarks(suite: benchmark.Suite) {
+export async function addEnforcerBenchmarks(suite: benchmark.Suite): Promise<void> {
   // BenchmarkBasicModel
   const eBasic = await newEnforcer(resolve('examples/basic_model.conf'), resolve('examples/basic_policy.csv'));
   eBasic.enableLog(false);

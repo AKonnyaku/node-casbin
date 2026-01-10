@@ -3,10 +3,10 @@ import * as path from 'path';
 import { Enforcer, newEnforcer, Util } from '../src';
 
 // Helper to resolve paths
-const resolve = (p: string) => path.join(__dirname, '..', p);
+const resolve = (p: string): string => path.join(__dirname, '..', p);
 
 // Helper to generate RBAC policies (Short names: group%d)
-async function generateRBAC(e: Enforcer, roles: number, resources: number, users: number) {
+async function generateRBAC(e: Enforcer, roles: number, resources: number, users: number): Promise<void> {
   const pPolicies = [];
   for (let i = 0; i < roles; i++) {
     pPolicies.push([`group${i}`, `data${Math.floor(i / 10)}`, 'read']);
@@ -24,7 +24,7 @@ async function generateRBAC(e: Enforcer, roles: number, resources: number, users
   }
 }
 
-export async function addRoleManagerBenchmarks(suite: benchmark.Suite) {
+export async function addRoleManagerBenchmarks(suite: benchmark.Suite): Promise<void> {
   // BenchmarkRoleManagerSmall
   const eSmall = await newEnforcer(resolve('examples/rbac_model.conf'));
   eSmall.enableLog(false);
