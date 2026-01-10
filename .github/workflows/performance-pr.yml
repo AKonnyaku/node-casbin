@@ -20,6 +20,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'yarn'
+          cache-dependency-path: pr/yarn.lock
 
       - name: Install dependencies (PR)
         working-directory: pr
