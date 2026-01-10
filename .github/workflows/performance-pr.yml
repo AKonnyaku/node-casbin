@@ -6,7 +6,7 @@ on:
 
 jobs:
   benchmark-pr:
-    name: Run Benchmark & Compare
+    name: Run Benchmark
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PR branch
@@ -29,7 +29,7 @@ jobs:
       - name: Run benchmark on PR branch
         working-directory: pr
         run: |
-          npx ts-node benchmark/index.ts > ../pr_raw.json
+          npx ts-node benchmark/index.ts > ../pr_raw.txt
 
       - name: Checkout base branch
         uses: actions/checkout@v4
@@ -44,28 +44,48 @@ jobs:
       - name: Run benchmark on base branch
         working-directory: base
         run: |
-          npx ts-node benchmark/index.ts > ../base_raw.json
+          npx ts-node benchmark/index.ts > ../base_raw.txt
+
+      - name: Upload benchmark raw data
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-raw
+          path: |
+            pr_raw.txt
+            base_raw.txt
+
+  report:
+    name: Generate Report
+    needs: benchmark-pr
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
+      - name: Download benchmark raw data
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-raw
+          path: .
+
       - name: Process Results
         run: |
-          # Use scripts from PR branch
-          cp -r pr/.github/scripts .
-
           # Format raw outputs to standardized JSON
-          # We don't need commit info for comparison, so we can skip env vars or set dummies
-          python scripts/format_benchmark_data.py base_raw.json base_standard.json
-          python scripts/format_benchmark_data.py pr_raw.json pr_standard.json
+          python .github/scripts/format_benchmark_data.py base_raw.txt base_standard.json
+          python .github/scripts/format_benchmark_data.py pr_raw.txt pr_standard.json
 
           # Generate Comparison Table
-          python scripts/benchstat_simulator.py base_standard.json pr_standard.json > comparison.md
+          python .github/scripts/benchstat_simulator.py base_standard.json pr_standard.json > comparison.md
 
           # Format/Beautify Table
-          python scripts/benchmark_formatter.py
+          python .github/scripts/benchmark_formatter.py
 
       - name: Save PR number
         run: |
