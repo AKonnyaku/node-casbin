@@ -9,7 +9,7 @@ import { addRoleManagerBenchmarks } from './role_manager_benchmark';
 const suite = new benchmark.Suite();
 
 (async () => {
-    console.log('Running benchmarks...');
+    console.error('Running benchmarks...');
 
     // Add all benchmarks
     await addEnforcerBenchmarks(suite);
@@ -17,12 +17,22 @@ const suite = new benchmark.Suite();
     await addManagementApiBenchmarks(suite);
     await addRoleManagerBenchmarks(suite);
 
+    const results: any[] = [];
+
     suite
         .on('cycle', (event: any) => {
-            console.log(String(event.target));
+            console.error(String(event.target));
+            results.push({
+                benchmark: event.target.name,
+                primaryMetric: {
+                    score: event.target.hz,
+                    scoreUnit: 'ops/s'
+                }
+            });
         })
         .on('complete', function (this: any) {
-            console.log('Benchmark finished.');
+            console.error('Benchmark finished.');
+            console.log(JSON.stringify(results, null, 2));
         })
         .run({ 'async': true });
 })();
