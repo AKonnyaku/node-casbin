@@ -31,14 +31,6 @@
 | [PyCasbin](https://github.com/casbin/pycasbin)                                           | [Casbin.NET](https://github.com/casbin-net/Casbin.NET)                                         | [Casbin-CPP](https://github.com/casbin/casbin-cpp)                                   | [Casbin-RS](https://github.com/casbin/casbin-rs)                                      |
 | production-ready                                                                         | production-ready                                                                               | beta-test                                                                            | production-ready                                                                      |
 
-## Benchmarks
-
-Benchmarks are available in the `benchmark` directory. You can run them using:
-
-```bash
-npm run benchmark
-```
-
 ## Documentation
 
 https://casbin.org/docs/overview

@@ -5,3 +5,6 @@ lib
 yarn-error.log
 package-lock.json
 coverage
+Dockerfile.node-ci
+ci_debug_helper.sh
+package.json
