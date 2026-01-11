@@ -27,6 +27,7 @@ const suite = new benchmark.Suite();
           score: event.target.hz,
           scoreUnit: 'ops/s',
         },
+        iterationCount: event.target.count,
       });
     })
     .on('complete', function (this: any) {

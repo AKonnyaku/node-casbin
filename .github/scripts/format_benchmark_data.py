@@ -69,8 +69,9 @@ def main():
             # seconds/op * 1e9 = ns/op
             val_ns = (1.0 / score) * 1e9
             
-            # We don't have total ops count in this JSON format usually, unless we add it
-            extra = "" 
+            # Extract iteration count if available
+            iterations = bench.get("iterationCount", 0)
+            extra = f"{iterations} times" if iterations > 0 else ""
             
             benches.append(
                 {"name": name, "value": round(val_ns, 2), "unit": "ns/op", "extra": extra}
