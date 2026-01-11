@@ -49,18 +49,35 @@ def main():
     print("goarch: amd64")
     print("pkg: github.com/casbin/node-casbin")
     
+    import subprocess
     cpu_info = "GitHub Actions Runner"
     try:
         if platform.system() == "Windows":
              cpu_info = platform.processor()
+        elif platform.system() == "Linux":
+            try:
+                # Try lscpu first
+                command = "lscpu"
+                output = subprocess.check_output(command, shell=True).decode()
+                for line in output.splitlines():
+                    if "Model name" in line:
+                        cpu_info = line.split(":")[1].strip()
+                        break
+            except:
+                # Fallback to /proc/cpuinfo
+                with open("/proc/cpuinfo", "r") as f:
+                    for line in f:
+                        if "model name" in line:
+                            cpu_info = line.split(":")[1].strip()
+                            break
     except:
         pass
     print(f"cpu: {cpu_info}")
     
-    # Reduced padding: 46 instead of 50
+    # Reduced padding: 52 instead of 50
     # Header
-    print(f"{'':<46}│ {'base':<19} │           {'pr':<19}           │")
-    print(f"{'':<46}│       sec/op        │    sec/op      vs base                │   Diff")
+    print(f"{'':<52}│ {'base':<19} │           {'pr':<19}           │")
+    print(f"{'':<52}│       sec/op        │    sec/op      vs base                │   Diff")
 
     base_values = []
     pr_values = []
@@ -83,14 +100,14 @@ def main():
         if base_val > 0 and pr_val > 0:
             comp_str = "~ (p=1.000 n=1) ²"
         
-        print(f"{name:<46}{base_str:<22}{pr_str:<22}{comp_str}")
+        print(f"{name:<52}{base_str:<22}{pr_str:<22}{comp_str}")
 
     if base_values and pr_values:
         def calc_geo(vals):
             return math.exp(sum(math.log(x) for x in vals) / len(vals))
         g_base = calc_geo(base_values)
         g_pr = calc_geo(pr_values)
-        print(f"{'geomean':<46}{format_val(g_base):<22}{format_val(g_pr):<22}")
+        print(f"{'geomean':<52}{format_val(g_base):<22}{format_val(g_pr):<22}")
 
     print("¹ need >= 6 samples for confidence interval at level 0.95")
     print("² all samples are equal")
