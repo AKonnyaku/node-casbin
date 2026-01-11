@@ -57,10 +57,10 @@ def main():
         pass
     print(f"cpu: {cpu_info}")
     
-    # Reduced padding: 34 instead of 40
+    # Reduced padding: 40 instead of 50
     # Header
-    print(f"{'':<34}│ {'base':<19} │           {'pr':<19}           │")
-    print(f"{'':<34}│       sec/op        │    sec/op      vs base                │   Diff")
+    print(f"{'':<40}│ {'base':<19} │           {'pr':<19}           │")
+    print(f"{'':<40}│       sec/op        │    sec/op      vs base                │   Diff")
 
     base_values = []
     pr_values = []
@@ -83,14 +83,14 @@ def main():
         if base_val > 0 and pr_val > 0:
             comp_str = "~ (p=1.000 n=1) ²"
         
-        print(f"{name:<34}{base_str:<22}{pr_str:<22}{comp_str}")
+        print(f"{name:<40}{base_str:<22}{pr_str:<22}{comp_str}")
 
     if base_values and pr_values:
         def calc_geo(vals):
             return math.exp(sum(math.log(x) for x in vals) / len(vals))
         g_base = calc_geo(base_values)
         g_pr = calc_geo(pr_values)
-        print(f"{'geomean':<34}{format_val(g_base):<22}{format_val(g_pr):<22}")
+        print(f"{'geomean':<40}{format_val(g_base):<22}{format_val(g_pr):<22}")
 
     print("¹ need >= 6 samples for confidence interval at level 0.95")
     print("² all samples are equal")
