@@ -129,7 +129,7 @@ export async function addEnforcerBenchmarks(suite: benchmark.Suite): Promise<voi
   // BenchmarkRBACModelSmall (Short names)
   const eSmall = await newEnforcer(resolve('examples/rbac_model.conf'));
   eSmall.enableLog(false);
-  await generateRBAC(eSmall, 100, 10, 1000);
+  await generateRBAC(eSmall, 100, 1000);
   suite.add('BenchmarkRBACModelSmall', {
     defer: true,
     fn: async (deferred: any) => {
@@ -141,7 +141,7 @@ export async function addEnforcerBenchmarks(suite: benchmark.Suite): Promise<voi
   // BenchmarkRBACModelMedium (Short names)
   const eMedium = await newEnforcer(resolve('examples/rbac_model.conf'));
   eMedium.enableLog(false);
-  await generateRBAC(eMedium, 1000, 100, 10000);
+  await generateRBAC(eMedium, 1000, 10000);
   suite.add('BenchmarkRBACModelMedium', {
     defer: true,
     fn: async (deferred: any) => {
