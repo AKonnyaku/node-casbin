@@ -6,7 +6,7 @@ import { Enforcer, newEnforcer, Util } from '../src';
 const resolve = (p: string): string => path.join(__dirname, '..', p);
 
 // Helper to generate RBAC policies (Short names: group%d)
-async function generateRBAC(e: Enforcer, roles: number, users: number): Promise<void> {
+async function generateRBAC(e: Enforcer, roles: number, resources: number, users: number): Promise<void> {
   const pPolicies = [];
   for (let i = 0; i < roles; i++) {
     pPolicies.push([`group${i}`, `data${Math.floor(i / 10)}`, 'read']);
@@ -61,7 +61,7 @@ export async function addRoleManagerBenchmarks(suite: benchmark.Suite): Promise<
   // BenchmarkRoleManagerLarge
   const eLarge = await newEnforcer(resolve('examples/rbac_model.conf'));
   eLarge.enableLog(false);
-  await generateRBAC(eLarge, 10000, 100000);
+  await generateRBAC(eLarge, 10000, 1000, 100000);
   const rmLarge = eLarge.getRoleManager();
   suite.add('BenchmarkRoleManagerLarge', {
     defer: true,

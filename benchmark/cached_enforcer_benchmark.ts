@@ -1,12 +1,12 @@
 import * as benchmark from 'benchmark';
 import * as path from 'path';
-import { CachedEnforcer, newCachedEnforcer } from '../src';
+import { CachedEnforcer, newCachedEnforcer, Util } from '../src';
 
 // Helper to resolve paths
 const resolve = (p: string): string => path.join(__dirname, '..', p);
 
 // Helper to generate RBAC policies (Short names: group%d)
-async function generateRBAC(e: CachedEnforcer, roles: number, users: number): Promise<void> {
+async function generateRBAC(e: CachedEnforcer, roles: number, resources: number, users: number): Promise<void> {
   const pPolicies = [];
   for (let i = 0; i < roles; i++) {
     pPolicies.push([`group${i}`, `data${Math.floor(i / 10)}`, 'read']);
@@ -74,7 +74,7 @@ export async function addCachedEnforcerBenchmarks(suite: benchmark.Suite): Promi
   // BenchmarkCachedRBACModelLarge
   const eLarge = await newCachedEnforcer(resolve('examples/rbac_model.conf'));
   eLarge.enableLog(false);
-  await generateRBAC(eLarge, 10000, 100000);
+  await generateRBAC(eLarge, 10000, 1000, 100000);
   suite.add('BenchmarkCachedRBACModelLarge', {
     defer: true,
     fn: async (deferred: any) => {

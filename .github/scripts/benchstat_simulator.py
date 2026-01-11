@@ -1,6 +1,7 @@
 import json
 import sys
 import math
+import re
 import platform
 
 # Force UTF-8 output
