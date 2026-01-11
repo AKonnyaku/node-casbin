@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 module.exports = async ({ github, context, core }) => {
   try {
     const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
@@ -7,7 +8,7 @@ module.exports = async ({ github, context, core }) => {
     });
 
     const matchArtifact = artifacts.data.artifacts.find((artifact) => {
-      return artifact.name == 'benchmark-results';
+      return artifact.name === 'benchmark-results';
     });
 
     if (!matchArtifact) {

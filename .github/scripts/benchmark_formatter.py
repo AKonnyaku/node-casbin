@@ -136,7 +136,6 @@ try:
             continue
 
         # Data Lines
-        original_line = line
         line = strip_worker_suffix(line)
         tokens = line.split()
         if not tokens:
@@ -153,7 +152,6 @@ try:
             return f"{INDENT}{aligned}{content}"
 
         # Geomean
-        is_geomean = tokens[0] == "geomean"
         
         if len(numbers) == 2 and numbers[0] != 0:
             diff_val = (numbers[1] - numbers[0]) / numbers[0] * 100

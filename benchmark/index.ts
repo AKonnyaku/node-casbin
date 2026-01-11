@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as benchmark from 'benchmark';
 import { addEnforcerBenchmarks } from './enforcer_benchmark';
 import { addCachedEnforcerBenchmarks } from './cached_enforcer_benchmark';

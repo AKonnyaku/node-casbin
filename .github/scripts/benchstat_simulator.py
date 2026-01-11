@@ -3,6 +3,7 @@ import sys
 import math
 import re
 import platform
+import subprocess
 
 # Force UTF-8 output
 sys.stdout.reconfigure(encoding="utf-8")
@@ -49,7 +50,6 @@ def main():
     print("goarch: amd64")
     print("pkg: github.com/casbin/node-casbin")
     
-    import subprocess
     cpu_info = "GitHub Actions Runner"
     try:
         if platform.system() == "Windows":
@@ -79,15 +79,9 @@ def main():
     print(f"{'':<52}│ {'base':<19} │           {'pr':<19}           │")
     print(f"{'':<52}│       sec/op        │    sec/op      vs base                │   Diff")
 
-    base_values = []
-    pr_values = []
-
     for name in all_names:
         base_val = base_map.get(name, 0)
         pr_val = pr_map.get(name, 0)
-
-        if base_val > 0: base_values.append(base_val)
-        if pr_val > 0: pr_values.append(pr_val)
 
         def format_cell(val):
             if val == 0: return "N/A"
