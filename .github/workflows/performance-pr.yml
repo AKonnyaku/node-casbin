@@ -1,0 +1,118 @@
+name: Performance Comparison for Pull Requests
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  benchmark-pr:
+    name: Run Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies (PR)
+        working-directory: pr
+        run: yarn install
+
+      - name: Run benchmark on PR branch
+        working-directory: pr
+        run: |
+          npx ts-node benchmark/index.ts > ../pr_raw.txt
+
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - name: Install dependencies (Base)
+        working-directory: base
+        run: yarn install
+
+      - name: Run benchmark on base branch
+        working-directory: base
+        run: |
+          # If benchmark directory doesn't exist in base (first time introduction), copy from PR
+          if [ ! -d "benchmark" ]; then
+            echo "Copying benchmark directory from PR to base..."
+            cp -r ../pr/benchmark .
+            echo "Installing benchmark dependency..."
+            npm install benchmark @types/benchmark --no-save
+          fi
+
+          # Also copy performance examples if they are missing in base (newly added)
+          if [ ! -d "examples/performance" ] && [ -d "../pr/examples/performance" ]; then
+            echo "Copying performance examples from PR to base..."
+            mkdir -p examples
+            cp -r ../pr/examples/performance examples/
+          fi
+
+          npx ts-node benchmark/index.ts > ../base_raw.txt
+
+      - name: Upload benchmark raw data
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-raw
+          path: |
+            pr_raw.txt
+            base_raw.txt
+
+  report:
+    name: Generate Report
+    needs: benchmark-pr
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download benchmark raw data
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-raw
+          path: .
+
+      - name: Process Results
+        run: |
+          # Format raw outputs to standardized JSON
+          python .github/scripts/format_benchmark_data.py base_raw.txt base_standard.json
+          python .github/scripts/format_benchmark_data.py pr_raw.txt pr_standard.json
+
+          # Generate Comparison Table
+          python .github/scripts/benchstat_simulator.py base_standard.json pr_standard.json > comparison.md
+
+          # Format/Beautify Table
+          python .github/scripts/benchmark_formatter.py
+
+      - name: Save PR number
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "Error: Pull request number is not available in event payload." >&2
+            exit 1
+          fi
+          echo "$PR_NUMBER" > pr_number.txt
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            comparison.md
+            pr_number.txt
