@@ -44,6 +44,13 @@ jobs:
       - name: Run benchmark on base branch
         working-directory: base
         run: |
+          # If benchmark directory doesn't exist in base (first time introduction), copy from PR
+          if [ ! -d "benchmark" ]; then
+            echo "Copying benchmark directory from PR to base..."
+            cp -r ../pr/benchmark .
+            # Also ensure dev dependencies like ts-node are available if not in base package.json
+            # However, npx ts-node should handle execution
+          fi
           npx ts-node benchmark/index.ts > ../base_raw.txt
 
       - name: Upload benchmark raw data
