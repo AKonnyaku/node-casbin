@@ -51,6 +51,14 @@ jobs:
             echo "Installing benchmark dependency..."
             npm install benchmark @types/benchmark --no-save
           fi
+
+          # Also copy performance examples if they are missing in base (newly added)
+          if [ ! -d "examples/performance" ] && [ -d "../pr/examples/performance" ]; then
+            echo "Copying performance examples from PR to base..."
+            mkdir -p examples
+            cp -r ../pr/examples/performance examples/
+          fi
+
           npx ts-node benchmark/index.ts > ../base_raw.txt
 
       - name: Upload benchmark raw data
