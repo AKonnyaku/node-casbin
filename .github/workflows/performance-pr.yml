@@ -48,8 +48,8 @@ jobs:
           if [ ! -d "benchmark" ]; then
             echo "Copying benchmark directory from PR to base..."
             cp -r ../pr/benchmark .
-            # Also ensure dev dependencies like ts-node are available if not in base package.json
-            # However, npx ts-node should handle execution
+            echo "Installing benchmark dependency..."
+            npm install benchmark @types/benchmark --no-save
           fi
           npx ts-node benchmark/index.ts > ../base_raw.txt
 
