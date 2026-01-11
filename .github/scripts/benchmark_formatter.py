@@ -92,7 +92,7 @@ try:
         if w > max_content_width:
             max_content_width = w
 
-    diff_col_start = max_content_width + 4
+    diff_col_start = max_content_width - 1
     # User asked to shift first column by 8 chars. 
     # This means the whole table shifts right? Or just the text inside?
     # I'll prepend 8 spaces to the final output line.
