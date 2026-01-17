@@ -127,5 +127,6 @@ This project is licensed under the [Apache 2.0 license](LICENSE).
 ## Contact
 
 If you have any issues or feature requests, please contact us. PR is welcomed.
+
 - https://github.com/casbin/node-casbin/issues
 - https://discord.gg/S5UjpzGZjN
